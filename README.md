@@ -46,3 +46,14 @@ specify a particular field to use, it splits each line by
 whitespace. When the `-d S` command line option is given, it uses the
 provided string as the field delimiter. `S` may be a string of
 multiple characters.
+
+## Installation
+
+If you don't have the Go programming language installed, then you'll
+need to install a copy from http://golang.org.
+
+Once you have Go installed:
+
+```
+go get github.com/karrick/histogram
+```
