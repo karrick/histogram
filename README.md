@@ -39,6 +39,10 @@ entire line is the token. When given the `-f N` command line option,
 it will select and tokenize the Nth field. For example, `-f 1` creates
 a histogram from the first field in the line.
 
+```
+histogram -f 2 < sample.txt | columnize
+```
+
 ### Specifying a Delimiter
 
 By default when this program is given a `-f N` command line option to
@@ -46,6 +50,10 @@ specify a particular field to use, it splits each line by
 whitespace. When the `-d S` command line option is given, it uses the
 provided string as the field delimiter. `S` may be a string of
 multiple characters.
+
+```
+histogram -f 2 -d : < sample.txt | columnize
+```
 
 ## Installation
 
