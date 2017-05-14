@@ -10,15 +10,17 @@ import (
 )
 
 var (
-	reverse   = flag.Bool("r", false, "reverse sort, so items are in ascending order")
-	field     = flag.Int("f", 0, "specify input field (Default: 0 implies entire line")
-	delimiter = flag.String("d", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
+	percentage = flag.Bool("p", false, "show percentage")
+	reverse    = flag.Bool("r", false, "reverse sort, so items are in ascending order")
+	field      = flag.Int("f", 0, "specify input field (Default: 0 implies entire line")
+	delimiter  = flag.String("d", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
 )
 
 func main() {
 	flag.Parse()
 
 	histogram := make(map[string]int)
+	var total int
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -37,6 +39,7 @@ func main() {
 			}
 		}
 		histogram[text] = histogram[text] + 1
+		total++
 	}
 	if err := scanner.Err(); err != nil {
 		bail(err)
@@ -64,10 +67,19 @@ func main() {
 		items = append(items[:i], append([]item{f}, items[i:]...)...)
 	}
 
-	fmt.Println("Value Count")
-	for _, foo := range items {
-		for _, value := range foo.values {
-			fmt.Println(foo.count, value)
+	if *percentage {
+		fmt.Println("Count Percentage Value")
+		for _, foo := range items {
+			for _, value := range foo.values {
+				fmt.Printf("%d %f %s\n", foo.count, float64(100*foo.count)/float64(total), value)
+			}
+		}
+	} else {
+		fmt.Println("Count Value")
+		for _, foo := range items {
+			for _, value := range foo.values {
+				fmt.Println(foo.count, value)
+			}
 		}
 	}
 }

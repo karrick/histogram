@@ -17,7 +17,18 @@ another utility to do that.  One such example is
 [my columnize utility](https://github.com/karrick/columnize).
 
 ```
-histogram < sample.txt | columnize
+histogram < sample.txt | columnize -h
+```
+
+### Show Percentage
+
+By default this program shows two columns of output. Count is the
+number of times the specified Value was found in the input. When the
+`-p` option is provided this program also displays the Percentage for
+each count.
+
+```
+histogram -p < sample.txt | columnize -h
 ```
 
 ### Reverse the Sort for Ascending Order
@@ -28,7 +39,7 @@ command line option, it will reverse the sort and the output in
 ascending order.
 
 ```
-histogram -r < sample.txt | columnize
+histogram -r < sample.txt | columnize -h
 ```
 
 ### Selecting a Field
@@ -40,7 +51,7 @@ it will select and tokenize the Nth field. For example, `-f 1` creates
 a histogram from the first field in the line.
 
 ```
-histogram -f 2 < sample.txt | columnize
+histogram -f 2 < sample.txt | columnize -h
 ```
 
 ### Specifying a Delimiter
@@ -52,7 +63,7 @@ provided string as the field delimiter. `S` may be a string of
 multiple characters.
 
 ```
-histogram -f 2 -d : < sample.txt | columnize
+histogram -f 2 -d : < sample.txt | columnize -h
 ```
 
 ## Installation
