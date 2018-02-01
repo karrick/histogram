@@ -2,41 +2,46 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/karrick/golf"
 )
 
 var (
-	percentage = flag.Bool("p", false, "show percentage")
-	reverse    = flag.Bool("r", false, "reverse sort, so items are in ascending order")
-	field      = flag.Int("f", 0, "specify input field (Default: 0 implies entire line")
-	delimiter  = flag.String("d", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
+	percentage = golf.BoolP('p', "percentage", false, "show percentage")
+	reverse    = golf.BoolP('r', "reverse", false, "reverse sort, so items are in ascending order")
+	field      = golf.IntP('f', "field", 0, "specify input field (Default: 0 implies entire line")
+	delimiter  = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
 )
 
 func main() {
-	flag.Parse()
+	golf.Parse()
 
 	histogram := make(map[string]int)
 	var total int
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
+		var fields []string
 		text := scanner.Text()
 		if *field == 0 {
 			text = strings.TrimSpace(text)
 		} else {
 			if *delimiter == "" {
-				text = strings.Fields(text)[*field-1]
+				fields = strings.Fields(text)
 			} else {
 				fields := strings.Split(text, *delimiter)
 				if len(fields) == 0 {
 					continue
 				}
-				text = fields[*field-1]
 			}
+			if len(fields) <= *field-1 {
+				continue
+			}
+			text = fields[*field-1]
 		}
 		histogram[text] = histogram[text] + 1
 		total++
@@ -71,7 +76,7 @@ func main() {
 		fmt.Println("Count Percentage Value")
 		for _, foo := range items {
 			for _, value := range foo.values {
-				fmt.Printf("%d %f %s\n", foo.count, float64(100*foo.count)/float64(total), value)
+				fmt.Println(foo.count, float64(100*foo.count)/float64(total), value)
 			}
 		}
 	} else {
