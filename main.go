@@ -1,100 +1,60 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
-	"sort"
-	"strings"
 
 	"github.com/karrick/golf"
+	"github.com/karrick/gorill"
 )
 
 var (
-	percentage = golf.BoolP('p', "percentage", false, "show percentage")
-	reverse    = golf.BoolP('r', "reverse", false, "reverse sort, so items are in ascending order")
-	field      = golf.IntP('f', "field", 0, "specify input field (Default: 0 implies entire line")
-	delimiter  = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
+	optDelimiter  = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
+	optField      = golf.IntP('f', "field", 0, "specify input field (Default: 0 implies entire line")
+	optFold       = golf.Bool("fold", false, "fold duplicate keys")
+	optPercentage = golf.BoolP('p', "percentage", false, "show percentage")
+	optSortAsc    = golf.Bool("ascending", false, "print histogram in ascending order")
+	optSortDesc   = golf.Bool("descending", false, "print histogram in descending order")
+	optWidth      = golf.IntP('w', "width", 80, "width of output histogram")
 )
 
 func main() {
 	golf.Parse()
 
-	histogram := make(map[string]int)
-	var total int
-
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		var fields []string
-		text := scanner.Text()
-		if *field == 0 {
-			text = strings.TrimSpace(text)
-		} else {
-			if *delimiter == "" {
-				fields = strings.Fields(text)
-			} else {
-				fields := strings.Split(text, *delimiter)
-				if len(fields) == 0 {
-					continue
-				}
-			}
-			if len(fields) <= *field-1 {
-				continue
-			}
-			text = fields[*field-1]
-		}
-		histogram[text] = histogram[text] + 1
-		total++
-	}
-	if err := scanner.Err(); err != nil {
-		bail(err)
-	}
-
-	// invert the hash
-	items := make([]item, 0, len(histogram))
-	for key, count := range histogram {
-		i := sort.Search(len(items), func(i int) bool {
-			if *reverse {
-				return items[i].count > count
-			} else {
-				return items[i].count < count
-			}
-		})
-		if i == len(items) {
-			items = append(items, item{count: count, values: []string{key}})
-			continue
-		}
-		if items[i].count == count {
-			items[i].values = append(items[i].values, key)
-			continue
-		}
-		f := item{count: count, values: []string{key}}
-		items = append(items[:i], append([]item{f}, items[i:]...)...)
-	}
-
-	if *percentage {
-		fmt.Println("Count Percentage Value")
-		for _, foo := range items {
-			for _, value := range foo.values {
-				fmt.Println(foo.count, float64(100*foo.count)/float64(total), value)
-			}
-		}
+	var ior io.Reader
+	if golf.NArg() == 0 {
+		ior = os.Stdin
 	} else {
-		fmt.Println("Count Value")
-		for _, foo := range items {
-			for _, value := range foo.values {
-				fmt.Println(foo.count, value)
-			}
-		}
+		ior = &gorill.FilesReader{Pathnames: golf.Args()}
+	}
+
+	hist := new(histogram)
+	err := hist.Ingest(ior, *optField, *optDelimiter)
+	if err != nil {
+		exit(err)
+	}
+
+	if *optFold {
+		hist.FoldDuplicateKeys()
+	}
+	if *optSortDesc {
+		hist.SortDescending()
+	} else if *optSortAsc {
+		hist.SortAscending()
+	}
+
+	if *optPercentage {
+		exit(hist.PrintWithPercent(*optWidth))
+	} else {
+		exit(hist.Print(*optWidth))
 	}
 }
 
-func bail(err error) {
-	fmt.Fprintf(os.Stderr, "%s", err)
-	os.Exit(1)
-}
-
-type item struct {
-	count  int
-	values []string
+func exit(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
