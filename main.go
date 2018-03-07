@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/karrick/gobls"
@@ -16,6 +17,7 @@ var (
 	optDelimiter = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
 	optField     = golf.IntP('f', "field", 0, "specify input field (Default: 0 implies entire line")
 	optFold      = golf.Bool("fold", false, "fold duplicate keys")
+	optHelp      = golf.BoolP('h', "help", false, "Print command line help and exit")
 	optPercent   = golf.BoolP('p', "percentage", false, "show percentage")
 	optSortAsc   = golf.Bool("ascending", false, "print histogram in ascending order")
 	optSortDesc  = golf.Bool("descending", false, "print histogram in descending order")
@@ -24,6 +26,17 @@ var (
 
 func main() {
 	golf.Parse()
+
+	if *optHelp {
+		fmt.Fprintf(os.Stderr, "%s\n", filepath.Base(os.Args[0]))
+		if *optHelp {
+			fmt.Fprintf(os.Stderr, "\tgenerate and display a histogram from keys read from multiple lines\n\n")
+			fmt.Fprintf(os.Stderr, "Reads input from multiple files specified on the command line or from\n")
+			fmt.Fprintf(os.Stderr, "standard input when no files are specified.\n\n")
+			golf.Usage()
+		}
+		exit(nil)
+	}
 
 	var ior io.Reader
 	if golf.NArg() == 0 {
