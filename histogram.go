@@ -91,16 +91,20 @@ func (hist *histogram) finalize() {
 }
 
 func (hist *histogram) Print(width int) error {
+	const extra = 3 // space between key and count, space between count and histogram, plus 1 to keep from final column
 	if len(hist.items) > 0 {
+		keyLength := hist.longestKey
+		if l := len("Value"); keyLength < l {
+			keyLength = l
+		}
 		countLength := len(strconv.FormatInt(int64(hist.largestCount), 10)) // width of the largest number
 		if l := len("Count"); countLength < l {                             // ensure long enough for "Count"
 			countLength = l
 		}
-		adjustedWidth := width - hist.longestKey - countLength - 3 // how many columns available for stars
+		adjustedWidth := width - keyLength - countLength - extra
 		if adjustedWidth < 1 {
-			return fmt.Errorf("cannot print with fewer than %d columns", width-adjustedWidth)
+			return fmt.Errorf("cannot print with fewer than %d columns", 1+width-adjustedWidth)
 		}
-		keyLength := hist.longestKey
 		fmt.Printf("%*s %*s\n", keyLength, "Value", countLength, "Count")
 		for _, i := range hist.items {
 			w := adjustedWidth * i.count / hist.largestCount
@@ -111,16 +115,20 @@ func (hist *histogram) Print(width int) error {
 }
 
 func (hist *histogram) PrintWithPercent(width int) error {
+	const extra = 7 + 3 // len(percent), plus space between key and count, space between count and perc, space between perc and histogram, plus 1 to keep from final column
 	if len(hist.items) > 0 {
+		keyLength := hist.longestKey
+		if l := len("Value"); keyLength < l {
+			keyLength = l
+		}
 		countLength := len(strconv.FormatInt(int64(hist.largestCount), 10)) // width of the largest number
 		if l := len("Count"); countLength < l {                             // ensure long enough for "Count"
 			countLength = l
 		}
-		adjustedWidth := width - hist.longestKey - countLength - 3 // how many columns available for stars
+		adjustedWidth := width - keyLength - countLength - extra
 		if adjustedWidth < 1 {
-			return fmt.Errorf("cannot print with fewer than %d columns", width-adjustedWidth)
+			return fmt.Errorf("cannot print with fewer than %d columns", 1+width-adjustedWidth)
 		}
-		keyLength := hist.longestKey
 		fmt.Printf("%*s %*s Percent\n", keyLength, "Value", countLength, "Count")
 		for _, i := range hist.items {
 			w := adjustedWidth * i.count / hist.largestCount
@@ -139,7 +147,12 @@ func (hist *histogram) FoldDuplicateKeys() {
 		histItemsIndex, ok := indexes[item.key]
 		if ok {
 			// already know about this key, but another reference to it
-			histItems[histItemsIndex].count += item.count
+			c := histItems[histItemsIndex].count
+			c += item.count
+			histItems[histItemsIndex].count = c
+			if hist.largestCount < c {
+				hist.largestCount = c
+			}
 		} else {
 			// have not seen this key before
 			histItems = append(histItems, item)

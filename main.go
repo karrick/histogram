@@ -38,6 +38,7 @@ func main() {
 	if *optFold {
 		hist.FoldDuplicateKeys()
 	}
+
 	if *optSortDesc {
 		hist.SortDescending()
 	} else if *optSortAsc {

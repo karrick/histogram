@@ -1,45 +1,41 @@
 # histogram
 
-Display a sorted histogram of the frequency of the input lines.
+Display a histogram of the frequency of keys from input lines.
 
 ## Usage
 
-```
-histogram < sample.txt
-```
+This program reads from the files specified on the command line after
+all the flags have been processed, or will read from standard input
+when no files are specified. The following two invocations will have
+the same effect:
 
-### Columns
+    $ histogram < sample.txt
+    $ histogram sample.txt
 
-This program does not columnize the output; rather it uses a single
-space character as the delimiter between the frequency count and the
-input lines. If prettified output is desired, one can pipe output to
-another utility to do that.  One such example is
-[my columnize utility](https://github.com/karrick/columnize).
+### Folding matching keys
 
-```
-histogram < sample.txt | columnize -h
-```
-
-### Show Percentage
-
-By default this program shows two columns of output. Count is the
-number of times the specified Value was found in the input. When the
-`-p` option is provided this program also displays the Percentage for
-each count.
+By default this program only aggregates the count of keys when they
+are adjacent to each other line after line. So a run of 10 keys "abc",
+followed by a single key "def", followed by another "abc" will result
+in the following output:
 
 ```
-histogram -p < sample.txt | columnize -h
+$ histogram
+Value Count
+  abc     2 *******************************************************************
+  def     1 *********************************
+  abc     1 *********************************
 ```
 
-### Reverse the Sort for Ascending Order
-
-By default this program sorts the histogram in descending order, from
-the most frequent to the least frequent token. When provided the `-r`
-command line option, it will reverse the sort and the output in
-ascending order.
+When provided the `--fold` flag, this program folds all matching keys
+such that their key value is equal to the aggregate value of the
+count:
 
 ```
-histogram -r < sample.txt | columnize -h
+$ histogram --fold
+Value Count
+  abc     3 *******************************************************************
+  def     1 **********************
 ```
 
 ### Selecting a Field
@@ -50,9 +46,7 @@ entire line is the token. When given the `-f N` command line option,
 it will select and tokenize the Nth field. For example, `-f 1` creates
 a histogram from the first field in the line.
 
-```
-histogram -f 2 < sample.txt | columnize -h
-```
+    $ histogram --field 2
 
 ### Specifying a Delimiter
 
@@ -62,8 +56,74 @@ whitespace. When the `-d S` command line option is given, it uses the
 provided string as the field delimiter. `S` may be a string of
 multiple characters.
 
+    $ histogram --field 2 --delimiter :
+
+### Show Percentage
+
+By default this program shows three columns of output. The value from
+the input text, followed by the number of times that key was found in
+a series, followed by a row of asterisk characters to show relative
+number of times that key was found compared to the other keys.
+
+When given the `-p, --percentage` flag, this program also shows a
+numeric percentage after the count column and before the histogram
+column.
+
 ```
-histogram -f 2 -d : < sample.txt | columnize -h
+$ histogram --percentage sample.txt
+Value Count Percent
+  abc     2   50.00 ************************************************************
+  def     1   25.00 ******************************
+  abc     1   25.00 ******************************
+```
+
+### Sort Ascending
+
+By default this program displays the output in the order the keys were
+encountered. When provided the `--ascending` flag, this program sorts
+the output such that the keys with the lowest counts are displayed
+first, and all successive lines will show a key with a count matching
+or greater to the previous line's count.
+
+```
+$ histogram --ascending sample.txt
+Value Count
+  def     1 *********************************
+  abc     1 *********************************
+  abc     2 *******************************************************************
+```
+
+### Sort Descending
+
+By default this program displays the output in the order the keys were
+encountered. When provided the `--descending` flag, this program sorts
+the output such that the keys with the largest counts are displayed
+first, and all successive lines will show a key with a count matching
+or less than the previous line's count.
+
+```
+$ histogram --descending sample.txt
+Value Count
+  abc     2 *******************************************************************
+  def     1 *********************************
+  abc     1 *********************************
+```
+
+### Histogram Width
+
+By default this program scales the output such that the longest row
+will consume no more than 80 characters. When provided the `-w,
+--width` flag, this program scales the output such that the longest
+row will consume no more than the specified number of characters. If
+the specified number of characters is too narrow, this program exits
+with an error.
+
+```
+$ histogram --width 20 sample.txt
+Value Count
+  abc     2 *******
+  def     1 ***
+  abc     1 ***
 ```
 
 ## Installation
@@ -75,5 +135,5 @@ need to install a copy from
 Once you have Go installed:
 
 ```
-go get github.com/karrick/histogram
+$ go get github.com/karrick/histogram
 ```
