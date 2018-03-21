@@ -11,6 +11,7 @@ import (
 	"github.com/karrick/gohistogram"
 	"github.com/karrick/golf"
 	"github.com/karrick/gorill"
+	"github.com/karrick/gows"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 	optPercent   = golf.BoolP('p', "percentage", false, "show percentage")
 	optSortAsc   = golf.Bool("ascending", false, "print histogram in ascending order")
 	optSortDesc  = golf.Bool("descending", false, "print histogram in descending order")
-	optWidth     = golf.IntP('w', "width", 80, "width of output histogram")
+	optWidth     = golf.IntP('w', "width", 0, "width of output histogram (Default: 0 implies use tty width")
 )
 
 func main() {
@@ -38,6 +39,17 @@ func main() {
 		exit(nil)
 	}
 
+	var err error
+	if *optWidth == 0 {
+		*optWidth, _, err = gows.GetWinSize()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "# cannot determine console width; using 80: %s\n", err)
+		}
+		if *optWidth == 0 {
+			*optWidth = 80
+		}
+	}
+
 	var ior io.Reader
 	if golf.NArg() == 0 {
 		ior = os.Stdin
@@ -46,7 +58,7 @@ func main() {
 	}
 
 	hist := new(gohistogram.Strings)
-	err := ingest(ior, hist, *optField, *optDelimiter)
+	err = ingest(ior, hist, *optField, *optDelimiter)
 	if err != nil {
 		exit(err)
 	}
