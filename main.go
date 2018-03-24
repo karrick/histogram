@@ -100,7 +100,7 @@ func ingest(ior io.Reader, hist *gohistogram.Strings, field int, delimiter strin
 			if delimiter == "" {
 				fields = strings.Fields(key)
 			} else {
-				fields := strings.Split(key, delimiter)
+				fields = strings.Split(key, delimiter)
 				if len(fields) == 0 {
 					continue
 				}
