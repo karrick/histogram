@@ -2,6 +2,7 @@ github.com/karrick/gobls v1.2.0 h1:vDuAY51E9vMx3Ch6GcCzHAxfmeF/1/4PUwhZSpKMptw=
 github.com/karrick/gohistogram v0.2.0 h1:jncnx1F1nWiG5LCqEWSzVuaHcsGRbce8Xst5VIz3bOw=
 github.com/karrick/golf v0.2.0 h1:smuvS6PsISTqWmxmERXbZ0TlbSm3LAllY92OknGOWB4=
 github.com/karrick/golf v0.3.0 h1:0X9T085MIfsyhgMRjgs9ZNVnATDWaZvDZsshJwwK06w=
+github.com/karrick/golf v1.0.0 h1:BXkglT+6BBvKpB4/MSmp5JmZz9uHXce3rYSgrwgn48w=
 github.com/karrick/gorill v1.3.0 h1:igfiRQx2yi8oXnPtxgJ/pBHs+IJBgnZ0InZfSKBfrzg=
 github.com/karrick/gows v0.2.0 h1:A3QxTsreOYJFMjSsQVTRLVcP0A6GlN3Qm1QQGKXai4g=
 golang.org/x/sys v0.0.0-20180329131831-378d26f46672 h1:P+cuqFpXzcxn8UtAwY33SZdbHLKsmjveBNV9V+RoYgQ=
