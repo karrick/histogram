@@ -15,14 +15,14 @@ import (
 )
 
 var (
-	optDelimiter = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (Default: empty string implies any whitespace")
-	optField     = golf.IntP('f', "field", 0, "specify input field (Default: 0 implies entire line")
+	optDelimiter = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (empty string implies split on\n\twhitespace)")
+	optField     = golf.StringP('f', "field", "", "Comma delimited list of field specifications to use as the histogram key.\n\tField numbering starts at 1. May include open ranges, such as '-3,5' for the\n\tfirst three fields, followed by the fifth field. The empty string implies\n\tentire line.")
 	optFold      = golf.Bool("fold", false, "fold duplicate keys")
 	optHelp      = golf.BoolP('h', "help", false, "Print command line help and exit")
 	optPercent   = golf.BoolP('p', "percentage", false, "show percentage")
 	optSortAsc   = golf.Bool("ascending", false, "print histogram in ascending order")
 	optSortDesc  = golf.Bool("descending", false, "print histogram in descending order")
-	optWidth     = golf.IntP('w', "width", 0, "width of output histogram (Default: 0 implies use tty width")
+	optWidth     = golf.IntP('w', "width", 0, "width of output histogram. 0 implies use tty width")
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	if *optHelp {
 		fmt.Fprintf(os.Stderr, "%s\n", filepath.Base(os.Args[0]))
 		if *optHelp {
-			fmt.Fprintf(os.Stderr, "\tgenerate and display a histogram from keys read from multiple lines\n\n")
+			fmt.Fprintf(os.Stderr, "\tGenerate and display a histogram of keys.\n\n")
 			fmt.Fprintf(os.Stderr, "Reads input from multiple files specified on the command line or from\n")
 			fmt.Fprintf(os.Stderr, "standard input when no files are specified.\n\n")
 			golf.Usage()
@@ -39,12 +39,14 @@ func main() {
 		exit(nil)
 	}
 
-	var err error
+	fs, err := NewFieldSplitter(*optField, *optDelimiter)
+	if err != nil {
+		exit(err)
+	}
+
 	if *optWidth == 0 {
-		*optWidth, _, err = gows.GetWinSize()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "# cannot determine console width; using 80: %s\n", err)
-		}
+		// ignore error; if cannot get window size, use 80
+		*optWidth, _, _ = gows.GetWinSize()
 		if *optWidth == 0 {
 			*optWidth = 80
 		}
@@ -57,26 +59,26 @@ func main() {
 		ior = &gorill.FilesReader{Pathnames: golf.Args()}
 	}
 
-	hist := new(gohistogram.Strings)
-	err = ingest(ior, hist, *optField, *optDelimiter)
-	if err != nil {
+	sh := new(gohistogram.Strings)
+
+	if err = ingest(ior, sh, fs); err != nil {
 		exit(err)
 	}
 
 	if *optFold {
-		hist.FoldDuplicateKeys()
+		sh.FoldDuplicateKeys()
 	}
 
 	if *optSortDesc {
-		hist.SortDescending()
+		sh.SortDescending()
 	} else if *optSortAsc {
-		hist.SortAscending()
+		sh.SortAscending()
 	}
 
 	if *optPercent {
-		exit(hist.PrintWithPercent(*optWidth))
+		exit(sh.PrintWithPercent(*optWidth))
 	} else {
-		exit(hist.Print(*optWidth))
+		exit(sh.Print(*optWidth))
 	}
 }
 
@@ -88,28 +90,12 @@ func exit(err error) {
 	os.Exit(0)
 }
 
-func ingest(ior io.Reader, hist *gohistogram.Strings, field int, delimiter string) error {
+func ingest(ior io.Reader, hist *gohistogram.Strings, fs *FieldSplitter) error {
 	scanner := gobls.NewScanner(ior)
 	for scanner.Scan() {
-		// split line into fields
-		var fields []string
-		key := scanner.Text()
-		if field == 0 {
-			key = strings.TrimSpace(key)
-		} else {
-			if delimiter == "" {
-				fields = strings.Fields(key)
-			} else {
-				fields = strings.Split(key, delimiter)
-				if len(fields) == 0 {
-					continue
-				}
-			}
-			if len(fields) <= field-1 {
-				continue
-			}
-			key = fields[field-1]
-		}
+		// Remove line ending and split line into fields, then join into string
+		key := fs.Select(strings.TrimRight(scanner.Text(), "\r\n"))
+
 		// ignore empty string at the end of the input
 		if len(key) > 0 {
 			hist.Add(key)
