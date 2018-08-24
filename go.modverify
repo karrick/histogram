@@ -3,6 +3,9 @@ github.com/karrick/gohistogram v0.2.0 h1:jncnx1F1nWiG5LCqEWSzVuaHcsGRbce8Xst5VIz
 github.com/karrick/golf v0.2.0 h1:smuvS6PsISTqWmxmERXbZ0TlbSm3LAllY92OknGOWB4=
 github.com/karrick/golf v0.3.0 h1:0X9T085MIfsyhgMRjgs9ZNVnATDWaZvDZsshJwwK06w=
 github.com/karrick/golf v1.0.0 h1:BXkglT+6BBvKpB4/MSmp5JmZz9uHXce3rYSgrwgn48w=
+github.com/karrick/golf v1.1.0 h1:pW5IaAZlmRaq2TVHp1ct0XouZw206+wSL+ifUF6fnp8=
 github.com/karrick/gorill v1.3.0 h1:igfiRQx2yi8oXnPtxgJ/pBHs+IJBgnZ0InZfSKBfrzg=
+github.com/karrick/gorill v1.5.0 h1:V4EPK9yCkfMBFAIMyL04kfBrG9v4zSoRtHAoWMnMrH0=
 github.com/karrick/gows v0.2.0 h1:A3QxTsreOYJFMjSsQVTRLVcP0A6GlN3Qm1QQGKXai4g=
 golang.org/x/sys v0.0.0-20180329131831-378d26f46672 h1:P+cuqFpXzcxn8UtAwY33SZdbHLKsmjveBNV9V+RoYgQ=
+golang.org/x/sys v0.0.0-20180824143301-4910a1d54f87 h1:GqwDwfvIpC33dK9bA1fD+JiDUNsuAiQiEkpHqUKze4o=
