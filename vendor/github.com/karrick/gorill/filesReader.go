@@ -19,7 +19,7 @@ type FilesReader struct {
 	// fh is the currently open file handle from which Read operations will take
 	// place. It can be nil, in which case Read will attempt to open the next
 	// file in the series and read from it.
-	fh *os.File
+	fh io.ReadCloser
 }
 
 // Close forgets the list of remaining files in the series, then closes the
@@ -81,13 +81,19 @@ func (fr *FilesReader) next() error {
 		return io.EOF
 	}
 
-	// NOTE: Consider having the '-' string open standard input
-	fh, err := os.Open(fr.Pathnames[0])
-	if err != nil {
-		return err
+	// The special string "-" reads from standard input, until EOF, but will not
+	// close standard input on EOF.
+	switch fr.Pathnames[0] {
+	case "-":
+		fr.fh = NopCloseReader(os.Stdin)
+	default:
+		fh, err := os.Open(fr.Pathnames[0])
+		if err != nil {
+			return err
+		}
+		fr.fh = fh
 	}
 
-	fr.fh = fh
 	fr.Pathnames = fr.Pathnames[1:]
 	return nil
 }

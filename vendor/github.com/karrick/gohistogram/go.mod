@@ -1,1 +1,3 @@
-module "github.com/karrick/gohistogram"
+module github.com/karrick/gohistogram
+
+go 1.12

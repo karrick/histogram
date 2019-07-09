@@ -14,58 +14,58 @@ type histItem struct {
 
 // Strings is a histogram of strings.
 type Strings struct {
-	countAfterFinalize int    // counts number of times Add called after last finalize
-	keycount           int    // counts number of times Add called with previous key
-	largestCount       int    // tracks the largest count of all the keys seen so far
-	longestKey         int    // tracks the longest key length
-	total              int    // counts the total number of items Add called
-	key                string // tracks the key Add most recently called with
+	addsAfterFinalize  int    // counts number of times Add called after last finalize
+	addsTotal          int    // counts the total number of items Add called
+	widthCountMax      int    // tracks the number of columns of the count that requires the most columns to display
+	widestKey          int    // tracks the number of columns of the key that requires the most columns to display
+	previousKeyColumns int    // number of columns required to display previous key
+	previousKey        string // tracks the key Add most recently called with
 	items              []*histItem
 }
 
 // Add will add the specified key to the histogram.
 func (hist *Strings) Add(key string) {
-	hist.total++
-	hist.countAfterFinalize++
+	hist.addsTotal++
+	hist.addsAfterFinalize++
 
-	if hist.countAfterFinalize == 1 {
+	if hist.addsAfterFinalize == 1 {
 		// first key ever, or after finalize
-		hist.key = key
-		hist.keycount = 1
+		hist.previousKey = key
+		hist.previousKeyColumns = 1
 		return
 	}
 
-	if hist.key == key {
-		hist.keycount++
+	if hist.previousKey == key {
+		hist.previousKeyColumns++
 		return
 	}
 
-	// new key
+	// this key is not previous key
 
-	hist.items = append(hist.items, &histItem{key: hist.key, count: hist.keycount})
-	if hist.largestCount < hist.keycount {
-		hist.largestCount = hist.keycount
+	hist.items = append(hist.items, &histItem{key: hist.previousKey, count: hist.previousKeyColumns})
+	if hist.widthCountMax < hist.previousKeyColumns {
+		hist.widthCountMax = hist.previousKeyColumns
 	}
-	if kl := len(hist.key); hist.longestKey < kl {
-		hist.longestKey = kl
+	if kl := len(hist.previousKey); hist.widestKey < kl {
+		hist.widestKey = kl
 	}
 
-	hist.key = key
-	hist.keycount = 1
+	hist.previousKey = key
+	hist.previousKeyColumns = 1
 }
 
 // finalize adds the current key and its count to the list of tracked items
 func (hist *Strings) finalize() {
-	if hist.countAfterFinalize > 0 {
-		hist.items = append(hist.items, &histItem{key: hist.key, count: hist.keycount})
-		if hist.largestCount < hist.keycount {
-			hist.largestCount = hist.keycount
+	if hist.addsAfterFinalize > 0 {
+		hist.items = append(hist.items, &histItem{key: hist.previousKey, count: hist.previousKeyColumns})
+		if hist.widthCountMax < hist.previousKeyColumns {
+			hist.widthCountMax = hist.previousKeyColumns
 		}
-		if kl := len(hist.key); hist.longestKey < kl {
-			hist.longestKey = kl
+		if kl := len(hist.previousKey); hist.widestKey < kl {
+			hist.widestKey = kl
 		}
-		hist.countAfterFinalize = 0
-		hist.key = "" // not required, but release the previous key
+		hist.addsAfterFinalize = 0
+		hist.previousKey = "" // not required, but release the previous key
 	}
 }
 
@@ -76,24 +76,46 @@ func (hist *Strings) Print(width int) error {
 	hist.finalize()
 
 	if len(hist.items) > 0 {
-		keyLength := hist.longestKey
+		keyLength := hist.widestKey
 		if l := len("Key"); keyLength < l {
 			keyLength = l
 		}
-		countLength := len(strconv.FormatInt(int64(hist.largestCount), 10)) // width of the largest number
-		if l := len("Count"); countLength < l {                             // ensure long enough for "Count"
+		countLength := len(strconv.FormatInt(int64(hist.widthCountMax), 10)) // width of the largest number
+		if l := len("Count"); countLength < l {                              // ensure long enough for "Count"
 			countLength = l
 		}
 		adjustedWidth := width - keyLength - countLength - extra
 		if adjustedWidth < 1 {
 			return fmt.Errorf("cannot print with fewer than %d columns", 1+width-adjustedWidth)
 		}
-		fmt.Printf("%-*s %*s (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.largestCount)/float64(adjustedWidth))
+		fmt.Printf("%-*s %*s (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.widthCountMax)/float64(adjustedWidth))
 		for _, i := range hist.items {
-			w := adjustedWidth * i.count / hist.largestCount
+			w := adjustedWidth * i.count / hist.widthCountMax
 			fmt.Printf("%-*s %*d %s\n", keyLength, i.key, countLength, i.count, strings.Repeat("*", w))
 		}
 	}
+
+	return nil
+}
+
+// PrintRaw displays the histogram with two columns: Key, and Count.
+func (hist *Strings) PrintRaw() error {
+	hist.finalize()
+
+	if len(hist.items) > 0 {
+		keyLength := hist.widestKey
+		if l := len("Key"); keyLength < l {
+			keyLength = l
+		}
+		countLength := len(strconv.FormatInt(int64(hist.widthCountMax), 10)) // width of the largest number
+		if l := len("Count"); countLength < l {                              // ensure long enough for "Count"
+			countLength = l
+		}
+		for _, i := range hist.items {
+			fmt.Printf("%-*s %*d\n", keyLength, i.key, countLength, i.count)
+		}
+	}
+
 	return nil
 }
 
@@ -104,25 +126,26 @@ func (hist *Strings) PrintWithPercent(width int) error {
 	hist.finalize()
 
 	if len(hist.items) > 0 {
-		keyLength := hist.longestKey
+		keyLength := hist.widestKey
 		if l := len("Key"); keyLength < l {
 			keyLength = l
 		}
-		countLength := len(strconv.FormatInt(int64(hist.largestCount), 10)) // width of the largest number
-		if l := len("Count"); countLength < l {                             // ensure long enough for "Count"
+		countLength := len(strconv.FormatInt(int64(hist.widthCountMax), 10)) // width of the largest number
+		if l := len("Count"); countLength < l {                              // ensure long enough for "Count"
 			countLength = l
 		}
 		adjustedWidth := width - keyLength - countLength - extra
 		if adjustedWidth < 1 {
 			return fmt.Errorf("cannot print with fewer than %d columns", 1+width-adjustedWidth)
 		}
-		perc := 100 / float64(hist.total)
-		fmt.Printf("%-*s %*s Percent (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.largestCount)/float64(adjustedWidth))
+		perc := 100 / float64(hist.addsTotal)
+		fmt.Printf("%-*s %*s Percent (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.widthCountMax)/float64(adjustedWidth))
 		for _, i := range hist.items {
-			w := adjustedWidth * i.count / hist.largestCount
+			w := adjustedWidth * i.count / hist.widthCountMax
 			fmt.Printf("%-*s %*d % 7.2f %s\n", keyLength, i.key, countLength, i.count, (float64(i.count) * perc), strings.Repeat("*", w))
 		}
 	}
+
 	return nil
 }
 
@@ -140,8 +163,8 @@ func (hist *Strings) FoldDuplicateKeys() {
 			c := histItems[histItemsIndex].count
 			c += item.count
 			histItems[histItemsIndex].count = c
-			if hist.largestCount < c {
-				hist.largestCount = c
+			if hist.widthCountMax < c {
+				hist.widthCountMax = c
 			}
 		} else {
 			// have not seen this key before

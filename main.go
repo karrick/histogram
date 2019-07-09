@@ -2,104 +2,98 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/karrick/gobls"
-	"github.com/karrick/gohistogram"
 	"github.com/karrick/golf"
-	"github.com/karrick/gorill"
-	"github.com/karrick/gows"
 )
 
 var (
-	optDelimiter = golf.StringP('d', "delimiter", "", "specify alternative field delimiter (empty string implies split on\n\twhitespace)")
-	optField     = golf.StringP('f', "field", "", "Comma delimited list of field specifications to use as the histogram key.\n\tField numbering starts at 1. May include open ranges, such as '-3,5' for the\n\tfirst three fields, followed by the fifth field. The empty string implies\n\tentire line.")
-	optFold      = golf.Bool("fold", false, "fold duplicate keys")
-	optHelp      = golf.BoolP('h', "help", false, "Print command line help and exit")
-	optPercent   = golf.BoolP('p', "percentage", false, "show percentage")
-	optSortAsc   = golf.Bool("ascending", false, "print histogram in ascending order")
-	optSortDesc  = golf.Bool("descending", false, "print histogram in descending order")
-	optWidth     = golf.IntP('w', "width", 0, "width of output histogram. 0 implies use tty width")
+	ProgramName            = filepath.Base(os.Args[0])
+	ProgramLongDescription string
+	ProgramOneLineSummary  string
+	ProgramUsageExamples   string
+	ProgramVersion         = "0.0.0"
+
+	optHelp    = golf.BoolP('h', "help", false, "Print command line help and exit")
+	optVersion = golf.BoolP('V', "version", false, "Print version information and exit")
+
+	optQuiet   = golf.BoolP('q', "quiet", false, "Do not print intermediate errors to stderr")
+	optVerbose = golf.BoolP('v', "verbose", false, "Print verbose output to stderr")
 )
+
+func briefUsage() {
+	fmt.Fprintf(os.Stderr, "Use `%s --help` for more information.\n", ProgramName)
+}
+
+func init() {
+	// Rather than display the entire usage information for a parsing error,
+	// merely allow golf library to display the error message, then print the
+	// command the user may use to show command line usage information.
+	golf.Usage = briefUsage
+}
 
 func main() {
 	golf.Parse()
 
 	if *optHelp {
-		fmt.Fprintf(os.Stderr, "%s\n", filepath.Base(os.Args[0]))
-		if *optHelp {
-			fmt.Fprintf(os.Stderr, "\tGenerate and display a histogram of keys.\n\n")
-			fmt.Fprintf(os.Stderr, "Reads input from multiple files specified on the command line or from\n")
-			fmt.Fprintf(os.Stderr, "standard input when no files are specified.\n\n")
-			golf.Usage()
+		fmt.Fprintf(os.Stderr, "%s version %s\n\n", ProgramName, ProgramVersion)
+		if ProgramLongDescription != "" {
+			fmt.Fprintln(os.Stderr, ProgramLongDescription)
 		}
-		exit(nil)
-	}
-
-	fs, err := NewFieldSplitter(*optField, *optDelimiter)
-	if err != nil {
-		exit(err)
-	}
-
-	if *optWidth == 0 {
-		// ignore error; if cannot get window size, use 80
-		*optWidth, _, _ = gows.GetWinSize()
-		if *optWidth == 0 {
-			*optWidth = 80
+		if ProgramUsageExamples != "" {
+			fmt.Fprintln(os.Stderr, ProgramUsageExamples)
 		}
+		fmt.Fprintln(os.Stderr, "Command line options:")
+		golf.PrintDefaults()
+		os.Exit(0)
 	}
 
-	var ior io.Reader
-	if golf.NArg() == 0 {
-		ior = os.Stdin
-	} else {
-		ior = &gorill.FilesReader{Pathnames: golf.Args()}
+	if *optVersion {
+		fmt.Fprintf(os.Stderr, "%s version %s; %s; `%s --help` for more information.\n", ProgramName, ProgramVersion, ProgramOneLineSummary, ProgramName)
+		os.Exit(0)
 	}
 
-	sh := new(gohistogram.Strings)
-
-	if err = ingest(ior, sh, fs); err != nil {
-		exit(err)
-	}
-
-	if *optFold {
-		sh.FoldDuplicateKeys()
-	}
-
-	if *optSortDesc {
-		sh.SortDescending()
-	} else if *optSortAsc {
-		sh.SortAscending()
-	}
-
-	if *optPercent {
-		exit(sh.PrintWithPercent(*optWidth))
-	} else {
-		exit(sh.Print(*optWidth))
-	}
-}
-
-func exit(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+	if err := cmd(); err != nil {
+		if _, ok := err.(ErrUsage); ok {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", ProgramName, err)
+			briefUsage()
+			os.Exit(2)
+		}
+		stderr("%s.\n", err)
 		os.Exit(1)
 	}
-	os.Exit(0)
 }
 
-func ingest(ior io.Reader, hist *gohistogram.Strings, fs *FieldSplitter) error {
-	scanner := gobls.NewScanner(ior)
-	for scanner.Scan() {
-		// Remove line ending and split line into fields, then join into string
-		key := fs.Select(strings.TrimRight(scanner.Text(), "\r\n"))
+// stderr formats and prints its arguments to standard error after prefixing
+// them with the program name.
+func stderr(f string, args ...interface{}) {
+	os.Stderr.Write([]byte(ProgramName + ": " + fmt.Sprintf(f, args...)))
+}
 
-		// ignore empty string at the end of the input
-		if len(key) > 0 {
-			hist.Add(key)
-		}
+// verbose formats and prints its arguments to standard error after prefixing
+// them with the program name.  This skips printing when optVerbose is false.
+func verbose(f string, args ...interface{}) {
+	if *optVerbose {
+		os.Stderr.Write([]byte(ProgramName + ": " + fmt.Sprintf(f, args...)))
 	}
-	return scanner.Err()
+}
+
+// warning formats and prints its arguments to standard error after prefixing
+// them with the program name.  This skips printing when optQuiet is true.
+func warning(f string, args ...interface{}) {
+	if !*optQuiet {
+		os.Stderr.Write([]byte(ProgramName + ": " + fmt.Sprintf(f, args...)))
+	}
+}
+
+// ErrUsage is returned by the program code it discovers a usage error when
+// parsing command line arguments.  It displays the error message, prints the
+// program usage information, then exists with program status code set to 2.
+type ErrUsage string
+
+func (e ErrUsage) Error() string { return string(e) }
+
+func NewErrUsage(f string, a ...interface{}) ErrUsage {
+	return ErrUsage(fmt.Sprintf(f, a...))
 }

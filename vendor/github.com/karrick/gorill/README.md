@@ -41,6 +41,29 @@ the following file in the series to be opened and read from. Similar to io.Multi
     }
 ```
 
+##### LineTerminatedReader
+
+When a program has an `io.Reader` and needs to ensure the final byte
+read is a newline, the `gorill.LineTerminatedReader` may be used to
+wrap the source `io.Reader` to provide that assurance.
+
+```Go
+func ExampleNewLineTerminatedReader() {
+	r := &LineTerminatedReader{R: bytes.NewReader([]byte("123\n456"))}
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+	if got, want := len(buf), 8; got != want {
+		fmt.Fprintf(os.Stderr, "GOT: %v; WANT: %v\n", got, want)
+		os.Exit(1)
+	}
+	fmt.Printf("%q\n", buf[len(buf)-1])
+	// Output: '\n'
+}
+```
+
 ##### NopWriteCloser
 
 If a program has an `io.Writer` but requires an `io.WriteCloser`, the program can imbue the
