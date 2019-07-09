@@ -1,7 +1,7 @@
 github.com/karrick/gobls v1.2.0 h1:vDuAY51E9vMx3Ch6GcCzHAxfmeF/1/4PUwhZSpKMptw=
 github.com/karrick/gobls v1.2.0/go.mod h1:sWtrCXDDQ3cMhrJIb2XBu+Cm+MImIj6mdRTdR4/jywk=
-github.com/karrick/gohistogram v0.3.0 h1:HKf+hLvporGTSenNtepD+Q7EUxpn68gdyiAXs8jFLmE=
-github.com/karrick/gohistogram v0.3.0/go.mod h1:WRhN58yw+TXgPBiTB1mmVNTgbuEIcuneWPo2PO3+SUg=
+github.com/karrick/gohistogram v0.3.1 h1:BhnOB2P4a5iUNg1RUlTNanS1q0iQZT15AUS0JK+pOxQ=
+github.com/karrick/gohistogram v0.3.1/go.mod h1:WRhN58yw+TXgPBiTB1mmVNTgbuEIcuneWPo2PO3+SUg=
 github.com/karrick/golf v1.2.0 h1:OK2hHJ8WVx3H8LAXhAwDM4tmdhEyKVbld/GF9J5sKnM=
 github.com/karrick/golf v1.2.0/go.mod h1:qGN0IhcEL+IEgCXp00RvH32UP59vtwc8w5YcIdArNRk=
 github.com/karrick/gorill v1.9.1 h1:D2xQMRbzaCOYW34S2MAWSa996/H23WThY5Z/bjVMEm0=
