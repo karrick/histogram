@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ProgramName            = filepath.Base(os.Args[0])
+	ProgramName            string
 	ProgramLongDescription string
 	ProgramOneLineSummary  string
 	ProgramUsageExamples   string
@@ -27,6 +27,12 @@ func briefUsage() {
 }
 
 func init() {
+	var err error
+	ProgramName, err = os.Executable()
+	if err != nil {
+		ProgramName = filepath.Base(os.Args[0])
+	}
+
 	// Rather than display the entire usage information for a parsing error,
 	// merely allow golf library to display the error message, then print the
 	// command the user may use to show command line usage information.
