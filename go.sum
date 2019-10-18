@@ -1,11 +1,11 @@
-github.com/karrick/gobls v1.3.1 h1:oipw6VsCMoYE+ZHxCGNjsFgQ1TqDBaSpkxa0D5CnU+k=
-github.com/karrick/gobls v1.3.1/go.mod h1:77Q8zkgooJj6bd3MkF37AZiQiWUdp8bhtG5lZj5iuK4=
+github.com/karrick/gobls v1.3.5 h1:YDlwkT2U3R7zX1t86PdHb1+uE74fFiJVP28eAUoTdwY=
+github.com/karrick/gobls v1.3.5/go.mod h1:ctF7wvQjWvKR5SQqqZSKtwaILuZj+kaaeo9dNYb+8d8=
 github.com/karrick/gohistogram v0.3.1 h1:BhnOB2P4a5iUNg1RUlTNanS1q0iQZT15AUS0JK+pOxQ=
 github.com/karrick/gohistogram v0.3.1/go.mod h1:WRhN58yw+TXgPBiTB1mmVNTgbuEIcuneWPo2PO3+SUg=
-github.com/karrick/golf v1.2.0 h1:OK2hHJ8WVx3H8LAXhAwDM4tmdhEyKVbld/GF9J5sKnM=
-github.com/karrick/golf v1.2.0/go.mod h1:qGN0IhcEL+IEgCXp00RvH32UP59vtwc8w5YcIdArNRk=
-github.com/karrick/gorill v1.10.1 h1:t8eZ86LQyETi7XqQYpeNknqDKO0IUHAwGYQwx51rnHg=
-github.com/karrick/gorill v1.10.1/go.mod h1:9d6O7+3ALuVfw2Bl0RS9xcgkLGGd6t4A2ddwGBBFX84=
+github.com/karrick/golf v1.3.0 h1:bpXRrLTMVU6r52KWNjLTl5c5zLRdwaao3H7R7A5Xazg=
+github.com/karrick/golf v1.3.0/go.mod h1:qGN0IhcEL+IEgCXp00RvH32UP59vtwc8w5YcIdArNRk=
+github.com/karrick/gorill v1.10.2 h1:MtSaM3eGwxguM153R32jeslMMFZxnr0ZvNEWU6dnByk=
+github.com/karrick/gorill v1.10.2/go.mod h1:RlCfg3XIDNF2pbami04hiO2Yj7k8es4rIs3dJONvCs0=
 github.com/karrick/gows v0.3.0 h1:/FGSuBiJMUqNOJPsAdLvHFg7RnkFoWBS8USpdco5ONQ=
 github.com/karrick/gows v0.3.0/go.mod h1:kdZ/jfdo8yqKYn+BMjBkhP+/oRKUABR1abaomzRi/n8=
 golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb h1:fgwFCsaw9buMuxNd6+DQfAuSFqbNiQZpcgJQAgJsK6k=
