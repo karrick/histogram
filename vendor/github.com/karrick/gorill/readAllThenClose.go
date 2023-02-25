@@ -11,10 +11,7 @@ func ReadAllThenClose(rc io.ReadCloser) ([]byte, error) {
 	buf, rerr := ioutil.ReadAll(rc)
 	cerr := rc.Close() // always close regardless of read error
 	if rerr != nil {
-		return nil, rerr // Read error has more context than Close error
+		return buf, rerr // Read error has more context than Close error
 	}
-	if cerr != nil {
-		return nil, cerr
-	}
-	return buf, nil
+	return buf, cerr
 }

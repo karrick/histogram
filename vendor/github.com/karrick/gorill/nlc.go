@@ -22,7 +22,7 @@ func NewlineCounter(ior io.Reader) (int, error) {
 			isNotFinalNewline = buf[n-1] != '\n'
 			var searchOffset int
 			for {
-				index := bytes.IndexByte(buf[searchOffset:n], '\n')
+				index := bytes.IndexRune(buf[searchOffset:n], '\n')
 				if index == -1 {
 					break // done counting newlines from this chunk
 				}

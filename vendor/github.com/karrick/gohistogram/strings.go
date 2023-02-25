@@ -91,28 +91,25 @@ func (hist *Strings) Print(width int) error {
 		fmt.Printf("%-*s %*s (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.widthCountMax)/float64(adjustedWidth))
 		for _, i := range hist.items {
 			w := adjustedWidth * i.count / hist.widthCountMax
-			fmt.Printf("%-*s %*d %s\n", keyLength, i.key, countLength, i.count, strings.Repeat("*", w))
+			if _, err := fmt.Printf("%-*s %*d %s\n", keyLength, i.key, countLength, i.count, strings.Repeat("*", w)); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-// PrintRaw displays the histogram with two columns: Key, and Count.
+// PrintRaw displays the histogram with two columns: Count, and Key.
 func (hist *Strings) PrintRaw() error {
 	hist.finalize()
 
 	if len(hist.items) > 0 {
-		keyLength := hist.widestKey
-		if l := len("Key"); keyLength < l {
-			keyLength = l
-		}
 		countLength := len(strconv.FormatInt(int64(hist.widthCountMax), 10)) // width of the largest number
-		if l := len("Count"); countLength < l {                              // ensure long enough for "Count"
-			countLength = l
-		}
 		for _, i := range hist.items {
-			fmt.Printf("%-*s %*d\n", keyLength, i.key, countLength, i.count)
+			if _, err := fmt.Printf("%*d %s\n", countLength, i.count, i.key); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -142,7 +139,9 @@ func (hist *Strings) PrintWithPercent(width int) error {
 		fmt.Printf("%-*s %*s Percent (~%.3g per *)\n", keyLength, "Key", countLength, "Count", float64(hist.widthCountMax)/float64(adjustedWidth))
 		for _, i := range hist.items {
 			w := adjustedWidth * i.count / hist.widthCountMax
-			fmt.Printf("%-*s %*d % 7.2f %s\n", keyLength, i.key, countLength, i.count, (float64(i.count) * perc), strings.Repeat("*", w))
+			if _, err := fmt.Printf("%-*s %*d % 7.2f %s\n", keyLength, i.key, countLength, i.count, (float64(i.count) * perc), strings.Repeat("*", w)); err != nil {
+				return err
+			}
 		}
 	}
 
